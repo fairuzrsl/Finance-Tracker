@@ -1,0 +1,1364 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Finance Tracker</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:wght@600;700&amp;display=swap" rel="stylesheet">
+  <script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        body: ['DM Sans', 'system-ui', 'sans-serif'],
+        heading: ['Source Serif 4', 'Georgia', 'serif']
+      }
+    }
+  }
+}
+</script>
+  <style>
+* { box-sizing: border-box; }
+html { 
+  width: 100%; 
+  height: 100%; 
+  overflow-x: hidden; 
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body { 
+  width: 100%; 
+  height: 100%; 
+  margin: 0; 
+  padding: 0; 
+  font-family: 'DM Sans', system-ui, sans-serif; 
+  overflow-x: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.app-scroll { overflow-y: auto; height: 100%; width: 100%; overflow-x: hidden; }
+.card-shadow { box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); }
+.card-shadow-lg { box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+input, select, textarea, button {
+  font-size: 16px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type="date"],
+input[type="number"],
+input[type="text"],
+select,
+textarea {
+  min-height: 48px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0;
+}
+input[type="number"] { 
+  -moz-appearance: textfield; 
+}
+select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 20px;
+  padding-right: 40px;
+}
+button {
+  min-height: 48px;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: pointer;
+}
+input:focus, select:focus, textarea:focus { 
+  outline: 2px solid #334155;
+  outline-offset: 2px;
+}
+.tab-active { border-bottom: 2px solid #334155; color: #0f172a; font-weight: 600; }
+.tab-inactive { border-bottom: 2px solid transparent; color: #94a3b8; }
+.fade-in { animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.progress-track { background: #e2e8f0; border-radius: 99px; height: 6px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+.toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; pointer-events: none; padding: 0 16px; max-width: calc(100vw - 32px); }
+.toast { pointer-events: auto; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; margin-bottom: 8px; animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes toastOut { to { opacity: 0; transform: translateX(20px); } }
+.inline-confirm { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.category-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+.category-remove:hover { opacity: 0.7; cursor: pointer; }
+@media (max-width: 640px) {
+  .app-scroll { width: 100%; overflow-x: hidden; }
+  .toast-container { left: 16px; right: auto; max-width: calc(100vw - 32px); }
+  body { user-select: auto; }
+}
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full bg-[#f4f5f7]" style="width: 100%; overflow-x: hidden;">
+  <div id="app" class="app-scroll w-full" style="width: 100%; overflow-x: hidden;">
+   <div class="w-full px-3 py-4 sm:px-4 sm:py-6 pb-24 sm:pb-20" style="max-width: 100%; margin: 0 auto;">
+    <!-- Header -->
+    <header class="mb-6 sm:mb-8" style="width: 100%; overflow-x: hidden;">
+     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+      <div style="min-width: 0; flex: 1;">
+       <h1 id="appTitle" class="font-heading text-xl sm:text-2xl font-bold text-slate-900 tracking-tight break-words">Finance Tracker</h1>
+       <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Monthly personal finance overview</p>
+      </div>
+      <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+       <button onclick="prevMonth()" class="p-1.5 sm:p-2 hover:bg-slate-200 rounded-lg transition" aria-label="Previous month"> <i data-lucide="chevron-left" style="width:18px;height:18px;color:#334155;"></i> </button> <span id="monthDisplay" class="text-xs sm:text-sm font-semibold text-slate-700 px-2 text-center whitespace-nowrap">April 2025</span> <button onclick="nextMonth()" class="p-1.5 sm:p-2 hover:bg-slate-200 rounded-lg transition" aria-label="Next month"> <i data-lucide="chevron-right" style="width:18px;height:18px;color:#334155;"></i> </button>
+      </div>
+     </div>
+    </header><!-- Summary Cards -->
+    <section id="summaryCards" class="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4 mb-6 sm:mb-8 w-full" aria-label="Financial Summary" style="width: 100%;">
+     <div class="bg-white rounded-lg sm:rounded-xl p-3 sm:p-5 card-shadow min-w-0" style="width: 100%;">
+      <p class="text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Opening Balance</p>
+      <div class="flex items-center gap-1 min-w-0">
+       <span class="text-sm sm:text-lg font-bold text-slate-800 truncate" id="openingBalDisplay">RM 0.00</span> <button onclick="showOpeningBalEdit()" class="text-slate-300 hover:text-slate-500 transition shrink-0" aria-label="Edit opening balance"> <i data-lucide="pencil" style="width:14px;height:14px;"></i> </button>
+      </div>
+     </div>
+     <div class="bg-white rounded-lg sm:rounded-xl p-3 sm:p-5 card-shadow min-w-0" style="width: 100%;">
+      <p class="text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Income</p>
+      <p class="text-sm sm:text-lg font-bold text-emerald-600 truncate" id="totalIncomeDisplay">RM 0.00</p>
+     </div>
+     <div class="bg-white rounded-lg sm:rounded-xl p-3 sm:p-5 card-shadow min-w-0" style="width: 100%;">
+      <p class="text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Expenses</p>
+      <p class="text-sm sm:text-lg font-bold text-rose-500 truncate" id="totalExpenseDisplay">RM 0.00</p>
+     </div>
+     <div class="bg-white rounded-lg sm:rounded-xl p-3 sm:p-5 card-shadow border-l-4 border-slate-800 min-w-0" style="width: 100%;">
+      <p class="text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Current Balance</p>
+      <p class="text-sm sm:text-lg font-bold text-slate-900 truncate" id="currentBalDisplay">RM 0.00</p>
+     </div>
+    </section><!-- Tabs -->
+    <nav class="flex gap-3 sm:gap-6 mb-4 sm:mb-6 border-b border-slate-200 overflow-x-auto -mx-3 sm:-mx-4 px-3 sm:px-4" aria-label="Main sections">
+     <button class="tab-active pb-2 text-xs sm:text-sm transition whitespace-nowrap px-1" data-tab="transactions" onclick="switchTab('transactions')">Transactions</button> <button class="tab-inactive pb-2 text-xs sm:text-sm transition whitespace-nowrap px-1" data-tab="budget" onclick="switchTab('budget')">Budget</button> <button class="tab-inactive pb-2 text-xs sm:text-sm transition whitespace-nowrap px-1" data-tab="analytics" onclick="switchTab('analytics')">Analytics</button> <button class="tab-inactive pb-2 text-xs sm:text-sm transition whitespace-nowrap px-1" data-tab="forecast" onclick="switchTab('forecast')">Forecast</button> <button class="tab-inactive pb-2 text-xs sm:text-sm transition whitespace-nowrap px-1" data-tab="settings" onclick="switchTab('settings')">Settings</button>
+    </nav><!-- Transactions Tab -->
+    <section id="tab-transactions" class="fade-in w-full" style="width: 100%;">
+     <!-- Add Transaction Form -->
+     <div class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 card-shadow mb-4 sm:mb-6 w-full" style="width: 100%;">
+      <h2 class="font-heading text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4" id="formTitle">Add Transaction</h2>
+      <form id="txForm" onsubmit="handleTxSubmit(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 w-full" style="width: 100%;">
+       <div style="width: 100%;">
+        <label for="txDate" class="block text-xs font-medium text-slate-500 mb-1">Date</label> <input type="date" id="txDate" required style="width: 100%; font-size: 16px;" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 bg-slate-50">
+       </div>
+       <div style="width: 100%;">
+        <label for="txType" class="block text-xs font-medium text-slate-500 mb-1">Type</label> <select id="txType" onchange="updateCategories()" required style="width: 100%; font-size: 16px;" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 bg-slate-50"> <option value="expense">Expense</option> <option value="income">Income</option> </select>
+       </div>
+       <div style="width: 100%;">
+        <label for="txCategory" class="block text-xs font-medium text-slate-500 mb-1">Category</label> <select id="txCategory" required style="width: 100%; font-size: 16px;" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 bg-slate-50"></select>
+       </div>
+       <div style="width: 100%;">
+        <label for="txDesc" class="block text-xs font-medium text-slate-500 mb-1">Description</label> <input type="text" id="txDesc" placeholder="e.g. Lunch" required style="width: 100%; font-size: 16px;" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 bg-slate-50">
+       </div>
+       <div style="width: 100%;">
+        <label for="txAmount" class="block text-xs font-medium text-slate-500 mb-1">Amount</label> <input type="number" id="txAmount" min="0.01" step="0.01" placeholder="0.00" required style="width: 100%; font-size: 16px;" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 bg-slate-50">
+       </div>
+       <div class="flex items-end gap-2 col-span-1 sm:col-span-2 lg:col-span-1" style="width: 100%;">
+        <button type="submit" id="txSubmitBtn" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg px-4 py-2 text-xs sm:text-sm font-medium transition" style="font-size: 16px; min-height: 44px;">Add</button> <button type="button" id="txCancelBtn" onclick="cancelEdit()" class="hidden border border-slate-300 text-slate-600 rounded-lg px-3 py-2 text-xs sm:text-sm font-medium hover:bg-slate-50 transition" style="font-size: 16px; min-height: 44px;">Cancel</button>
+       </div>
+      </form>
+     </div><!-- Filter -->
+     <div class="flex flex-wrap gap-2 mb-4 items-center w-full" style="width: 100%;">
+      <span class="text-xs text-slate-400 font-medium shrink-0">Filter:</span> <button onclick="setFilter('all')" class="filter-btn text-xs px-3 py-1 rounded-full border transition" data-filter="all">All</button> <button onclick="setFilter('income')" class="filter-btn text-xs px-3 py-1 rounded-full border transition" data-filter="income">Income</button> <button onclick="setFilter('expense')" class="filter-btn text-xs px-3 py-1 rounded-full border transition" data-filter="expense">Expense</button>
+     </div><!-- Transaction List -->
+     <div id="txList" class="space-y-2 w-full" style="width: 100%;"></div>
+     <p id="txEmpty" class="text-center text-slate-400 text-xs sm:text-sm py-6 sm:py-8 hidden">No transactions yet. Add one above.</p>
+    </section><!-- Budget Tab -->
+    <section id="tab-budget" class="fade-in hidden w-full" style="width: 100%;">
+     <div class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 card-shadow w-full" style="width: 100%; overflow-x: hidden;">
+      <h2 class="font-heading text-base sm:text-lg font-semibold text-slate-800 mb-4">Monthly Budget by Category</h2>
+      <div id="budgetList" class="space-y-4 w-full" style="width: 100%; overflow-x: hidden;"></div>
+     </div>
+    </section><!-- Analytics Tab -->
+    <section id="tab-analytics" class="fade-in hidden w-full" style="width: 100%;">
+     <div class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 card-shadow w-full" style="width: 100%; overflow-x: hidden;">
+      <h2 class="font-heading text-base sm:text-lg font-semibold text-slate-800 mb-4">Income vs Expenses</h2>
+      <div class="relative w-full" style="height: 300px; width: 100%; overflow-x: hidden;">
+       <canvas id="chartCanvas" style="max-width: 100%;"></canvas>
+      </div>
+     </div>
+    </section><!-- Forecast Tab -->
+    <section id="tab-forecast" class="fade-in hidden w-full" style="width: 100%;">
+     <div class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 card-shadow w-full mb-4" style="width: 100%;">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+       <h2 class="font-heading text-base sm:text-lg font-semibold text-slate-800">Financial Forecast</h2>
+       <div class="flex gap-2"><button onclick="setForecastMonths(3)" id="forecast-3m" class="forecast-period-btn px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border transition" style="font-size: 16px; min-height: 40px;">3 Months</button> <button onclick="setForecastMonths(6)" id="forecast-6m" class="forecast-period-btn px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border transition" style="font-size: 16px; min-height: 40px;">6 Months</button>
+       </div>
+      </div>
+      <div id="forecastAlerts" class="space-y-2 mb-4"></div>
+      <div id="forecastCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full" style="width: 100%;"></div>
+     </div>
+     <div class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 card-shadow w-full" style="width: 100%; overflow-x: hidden;">
+      <h3 class="font-heading text-base sm:text-lg font-semibold text-slate-800 mb-4">Forecast Trend</h3>
+      <div class="relative w-full" style="height: 300px; width: 100%; overflow-x: hidden;">
+       <canvas id="forecastChartCanvas" style="max-width: 100%;"></canvas>
+      </div>
+     </div>
+    </section><!-- Settings Tab -->
+    <section id="tab-settings" class="fade-in hidden w-full" style="width: 100%;">
+     <div class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 card-shadow w-full" style="width: 100%; overflow-x: hidden;">
+      <h2 class="font-heading text-base sm:text-lg font-semibold text-slate-800 mb-4">Manage Categories</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full" style="width: 100%;">
+       <div style="width: 100%; overflow-x: hidden;">
+        <h3 class="font-semibold text-slate-700 text-sm mb-3">Expense Categories</h3>
+        <div id="expenseCatsList" class="space-y-2 mb-3 w-full" style="width: 100%; overflow-x: hidden;"></div>
+        <div class="flex gap-2 w-full" style="width: 100%;">
+         <input type="text" id="newExpCat" placeholder="Add category" style="font-size: 16px; flex: 1; min-width: 0;" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 bg-slate-50"> <button onclick="addExpenseCat()" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition shrink-0" style="font-size: 16px; min-height: 44px;">Add</button>
+        </div>
+       </div>
+       <div style="width: 100%; overflow-x: hidden;">
+        <h3 class="font-semibold text-slate-700 text-sm mb-3">Income Categories</h3>
+        <div id="incomeCatsList" class="space-y-2 mb-3 w-full" style="width: 100%; overflow-x: hidden;"></div>
+        <div class="flex gap-2 w-full" style="width: 100%;">
+         <input type="text" id="newIncCat" placeholder="Add category" style="font-size: 16px; flex: 1; min-width: 0;" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 bg-slate-50"> <button onclick="addIncomeCat()" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition shrink-0" style="font-size: 16px; min-height: 44px;">Add</button>
+        </div>
+       </div>
+      </div>
+     </div>
+    </section>
+   </div>
+  </div><!-- Opening Balance Modal -->
+  <div id="obModal" class="fixed inset-0 bg-black/30 flex items-center justify-center z-50 hidden" onclick="closeOBModal(event)">
+   <div class="bg-white rounded-xl p-6 w-80 card-shadow-lg" onclick="event.stopPropagation()">
+    <h3 class="font-heading text-base font-semibold text-slate-800 mb-3">Set Opening Balance</h3><label for="obInput" class="block text-xs font-medium text-slate-500 mb-1">Amount</label> <input type="number" id="obInput" step="0.01" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-slate-300">
+    <div class="flex gap-2">
+     <button onclick="saveOpeningBal()" class="flex-1 bg-slate-800 text-white rounded-lg py-2 text-sm font-medium hover:bg-slate-700 transition">Save</button> <button onclick="document.getElementById('obModal').classList.add('hidden')" class="flex-1 border border-slate-200 text-slate-600 rounded-lg py-2 text-sm font-medium hover:bg-slate-50 transition">Cancel</button>
+    </div>
+   </div>
+  </div><!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+  <script>
+// ── Storage Management (Hybrid: IndexedDB + localStorage) ──
+const STORAGE_DB_NAME = 'FinanceTrackerDB';
+const STORAGE_VERSION = 1;
+const STORAGE_STORE = 'appData';
+const LOCALSTORAGE_KEY = 'financeData_v2';
+
+let db = null;
+let isStorageReady = false;
+let hasAttemptedStorageInit = false;
+
+async function initStorage() {
+  if (hasAttemptedStorageInit) return;
+  hasAttemptedStorageInit = true;
+
+  return new Promise((resolve) => {
+    if (!window.indexedDB) {
+      console.log('IndexedDB not available, using localStorage only');
+      isStorageReady = true;
+      resolve();
+      return;
+    }
+
+    try {
+      const request = indexedDB.open(STORAGE_DB_NAME, STORAGE_VERSION);
+      
+      request.onerror = () => {
+        console.warn('IndexedDB open failed, using localStorage fallback');
+        isStorageReady = true;
+        resolve();
+      };
+      
+      request.onsuccess = (e) => {
+        db = e.target.result;
+        isStorageReady = true;
+        resolve();
+      };
+      
+      request.onupgradeneeded = (e) => {
+        try {
+          const newDb = e.target.result;
+          if (!newDb.objectStoreNames.contains(STORAGE_STORE)) {
+            newDb.createObjectStore(STORAGE_STORE);
+          }
+        } catch (err) {
+          console.warn('IndexedDB upgrade failed:', err);
+        }
+      };
+    } catch (e) {
+      console.warn('IndexedDB not accessible:', e);
+      isStorageReady = true;
+      resolve();
+    }
+  });
+}
+
+async function saveToStorage(data) {
+  if (!data) return false;
+
+  try {
+    const jsonStr = JSON.stringify(data);
+    
+    // Save to localStorage as PRIMARY (more reliable for iOS)
+    try {
+      localStorage.setItem(LOCALSTORAGE_KEY, jsonStr);
+    } catch (e) {
+      console.warn('localStorage save failed:', e);
+      // Continue to IndexedDB even if localStorage fails
+    }
+
+    // Save to IndexedDB as BACKUP
+    if (db && isStorageReady) {
+      return new Promise((resolve) => {
+        try {
+          const tx = db.transaction([STORAGE_STORE], 'readwrite');
+          const store = tx.objectStore(STORAGE_STORE);
+          store.put(data, 'financeData');
+          
+          tx.oncomplete = () => {
+            resolve(true);
+          };
+          
+          tx.onerror = () => {
+            console.warn('IndexedDB save transaction failed');
+            resolve(true); // Still return true since localStorage saved
+          };
+        } catch (e) {
+          console.warn('IndexedDB transaction failed:', e);
+          resolve(true); // Still return true since localStorage saved
+        }
+      });
+    }
+    return true;
+  } catch (e) {
+    console.error('Save to storage failed:', e);
+    return false;
+  }
+}
+
+async function loadFromStorage() {
+  try {
+    // Try localStorage FIRST (more reliable for iOS)
+    const lsData = localStorage.getItem(LOCALSTORAGE_KEY);
+    if (lsData) {
+      try {
+        const parsed = JSON.parse(lsData);
+        console.log('Loaded from localStorage:', !!parsed.months);
+        return parsed;
+      } catch (e) {
+        console.warn('localStorage parse failed:', e);
+      }
+    }
+
+    // Fallback to IndexedDB if localStorage empty
+    if (db && isStorageReady) {
+      return new Promise((resolve) => {
+        try {
+          const tx = db.transaction([STORAGE_STORE], 'readonly');
+          const store = tx.objectStore(STORAGE_STORE);
+          const request = store.get('financeData');
+          
+          request.onsuccess = () => {
+            if (request.result) {
+              console.log('Loaded from IndexedDB:', !!request.result.months);
+              resolve(request.result);
+            } else {
+              console.log('No data found in any storage');
+              resolve(null);
+            }
+          };
+          
+          request.onerror = () => {
+            console.warn('IndexedDB read failed');
+            resolve(null);
+          };
+
+          tx.onerror = () => {
+            console.warn('IndexedDB transaction error');
+            resolve(null);
+          };
+        } catch (e) {
+          console.warn('IndexedDB access failed:', e);
+          resolve(null);
+        }
+      });
+    }
+
+    console.log('No data found in any storage');
+    return null;
+  } catch (e) {
+    console.error('Load from storage failed:', e);
+    return null;
+  }
+}
+
+// ── Config & State ──
+let EXPENSE_CATS = ['Food and Meals','Entertainment','Transport','Credit Card','Utility','Others'];
+let INCOME_CATS = ['Salary','Freelance','Bonus','Other Income'];
+
+let state = {
+  months: {}, // { 'YYYY-MM': { openingBalance, transactions, budgets } }
+  filter: 'all',
+  editingId: null,
+  currentMonth: null, // Will be set to today's month on init
+  forecastMonths: 3
+};
+
+let currency = 'RM';
+let appTitleText = 'Finance Tracker';
+let chart = null;
+let forecastChart = null;
+
+// ── Element SDK ──
+const defaultConfig = {
+  app_title: 'Finance Tracker',
+  currency_symbol: 'RM',
+  bg_color: '#f4f5f7',
+  card_color: '#ffffff',
+  text_color: '#0f172a',
+  accent_color: '#334155',
+  muted_color: '#94a3b8',
+  font_family: 'DM Sans',
+  font_size: 14
+};
+
+function applyConfig(config) {
+  const c = { ...defaultConfig, ...config };
+  currency = c.currency_symbol || 'RM';
+  appTitleText = c.app_title || 'Finance Tracker';
+
+  const el = document.getElementById('appTitle');
+  if (el) el.textContent = appTitleText;
+
+  document.body.style.backgroundColor = c.bg_color;
+  document.querySelectorAll('.bg-white').forEach(e => e.style.backgroundColor = c.card_color);
+
+  const font = c.font_family || defaultConfig.font_family;
+  document.body.style.fontFamily = `${font}, system-ui, sans-serif`;
+
+  const base = c.font_size || 14;
+  document.querySelectorAll('h1').forEach(e => e.style.fontSize = `${base * 1.8}px`);
+  document.querySelectorAll('h2').forEach(e => e.style.fontSize = `${base * 1.3}px`);
+
+  renderAll();
+}
+
+if (window.elementSdk) {
+  window.elementSdk.init({
+    defaultConfig,
+    onConfigChange: async (config) => applyConfig(config),
+    mapToCapabilities: (config) => ({
+      recolorables: [
+        { get: () => config.bg_color || defaultConfig.bg_color, set: (v) => { config.bg_color = v; window.elementSdk.setConfig({ bg_color: v }); } },
+        { get: () => config.card_color || defaultConfig.card_color, set: (v) => { config.card_color = v; window.elementSdk.setConfig({ card_color: v }); } },
+        { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+        { get: () => config.accent_color || defaultConfig.accent_color, set: (v) => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); } },
+        { get: () => config.muted_color || defaultConfig.muted_color, set: (v) => { config.muted_color = v; window.elementSdk.setConfig({ muted_color: v }); } }
+      ],
+      borderables: [],
+      fontEditable: {
+        get: () => config.font_family || defaultConfig.font_family,
+        set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+      },
+      fontSizeable: {
+        get: () => config.font_size || defaultConfig.font_size,
+        set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+      }
+    }),
+    mapToEditPanelValues: (config) => new Map([
+      ['app_title', config.app_title || defaultConfig.app_title],
+      ['currency_symbol', config.currency_symbol || defaultConfig.currency_symbol]
+    ])
+  });
+}
+
+// ── Persistence (localStorage + IndexedDB) ──
+function saveState() {
+  const dataToSave = {
+    months: state.months,
+    categories: { expense: EXPENSE_CATS, income: INCOME_CATS },
+    timestamp: Date.now()
+  };
+  // Always save synchronously to localStorage AND async to IndexedDB
+  saveToStorage(dataToSave).catch(e => console.error('Failed to save state:', e));
+}
+
+async function loadState() {
+  // Load from storage - this is the ONLY place we load initial data
+  const saved = await loadFromStorage();
+  
+  if (saved && saved.months && Object.keys(saved.months).length > 0) {
+    // RESTORE saved data - DO NOT overwrite
+    state.months = saved.months;
+    console.log('✓ Restored state from storage. Months:', Object.keys(state.months));
+    
+    if (saved.categories) {
+      EXPENSE_CATS = saved.categories.expense || EXPENSE_CATS;
+      INCOME_CATS = saved.categories.income || INCOME_CATS;
+      console.log('✓ Restored categories');
+    }
+  } else {
+    // Only initialize default data if NO data exists
+    console.log('No saved data found. Initializing with sample data...');
+    const today = new Date();
+    const currentMonth = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
+    const yesterday = new Date(today.getTime() - 86400000);
+    const yesterdayStr = yesterday.getFullYear() + '-' + String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + String(yesterday.getDate()).padStart(2, '0');
+    const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    
+    state.months[currentMonth] = {
+      openingBalance: 5000,
+      transactions: [
+        { id: genId(), date: yesterdayStr, type: 'income', category: 'Salary', desc: 'Monthly salary', amount: 4500 },
+        { id: genId(), date: todayStr, type: 'expense', category: 'Food and Meals', desc: 'Groceries', amount: 85.50 },
+        { id: genId(), date: todayStr, type: 'expense', category: 'Transport', desc: 'Fuel', amount: 120 },
+        { id: genId(), date: todayStr, type: 'expense', category: 'Utility', desc: 'Electric bill', amount: 210 }
+      ],
+      budgets: { 'Food and Meals': 600, 'Entertainment': 200, 'Transport': 300, 'Credit Card': 500, 'Utility': 400, 'Others': 200 }
+    };
+    
+    // Save sample data to storage
+    saveState();
+    console.log('✓ Initialized with sample data');
+  }
+}
+
+// Auto-duplicate transactions from previous month
+function autoDuplicateFromPrevMonth(monthStr) {
+  const monthData = getMonthData(monthStr);
+  
+  // If this month already has transactions or budgets, don't duplicate
+  if (monthData.transactions.length > 0 || Object.keys(monthData.budgets).length > 0) {
+    return;
+  }
+
+  // Get previous month
+  const [year, month] = monthStr.split('-');
+  let prevYear = parseInt(year);
+  let prevMonth = parseInt(month) - 1;
+  if (prevMonth < 1) {
+    prevMonth = 12;
+    prevYear--;
+  }
+  const prevMonthStr = prevYear + '-' + String(prevMonth).padStart(2, '0');
+  const prevMonthData = state.months[prevMonthStr];
+
+  if (!prevMonthData) return;
+
+  // Copy opening balance from previous month
+  if (prevMonthData.openingBalance !== undefined) {
+    monthData.openingBalance = prevMonthData.openingBalance;
+  }
+
+  // Copy recurring transactions (income and recurring expenses)
+  if (prevMonthData.transactions && prevMonthData.transactions.length > 0) {
+    const today = new Date();
+    const firstDayOfMonth = new Date(parseInt(year), parseInt(month) - 1, 1);
+    const dayOfMonth = today.getDate();
+
+    prevMonthData.transactions.forEach(tx => {
+      // Calculate same day in current month
+      const txDate = new Date(tx.date);
+      const txDay = txDate.getDate();
+      let newDate = new Date(firstDayOfMonth);
+      newDate.setDate(txDay);
+
+      // Don't create dates beyond current month or past today
+      if (newDate > today) {
+        newDate = today;
+      }
+
+      const newDateStr = newDate.getFullYear() + '-' + String(newDate.getMonth() + 1).padStart(2, '0') + '-' + String(newDate.getDate()).padStart(2, '0');
+
+      // Copy transaction with new ID and date
+      monthData.transactions.push({
+        id: genId(),
+        date: newDateStr,
+        type: tx.type,
+        category: tx.category,
+        desc: tx.desc,
+        amount: tx.amount
+      });
+    });
+  }
+
+  // Copy budgets
+  if (prevMonthData.budgets) {
+    monthData.budgets = { ...prevMonthData.budgets };
+  }
+
+  saveState();
+}
+
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+// ── Month Navigation ──
+function getMonthData(monthStr) {
+  if (!state.months[monthStr]) {
+    state.months[monthStr] = { openingBalance: 0, transactions: [], budgets: {} };
+  }
+  return state.months[monthStr];
+}
+
+function getCurrentMonthStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+function getMonthDisplay(monthStr) {
+  const [year, month] = monthStr.split('-');
+  const d = new Date(year, parseInt(month) - 1, 1);
+  return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+}
+
+function prevMonth() {
+  const [year, month] = state.currentMonth.split('-');
+  let y = parseInt(year);
+  let m = parseInt(month) - 1;
+  if (m < 1) { m = 12; y--; }
+  state.currentMonth = y + '-' + String(m).padStart(2, '0');
+  updateMonthDisplay();
+  renderAll();
+}
+
+function nextMonth() {
+  const [year, month] = state.currentMonth.split('-');
+  let y = parseInt(year);
+  let m = parseInt(month) + 1;
+  if (m > 12) { m = 1; y++; }
+  state.currentMonth = y + '-' + String(m).padStart(2, '0');
+  autoDuplicateFromPrevMonth(state.currentMonth);
+  updateMonthDisplay();
+  renderAll();
+}
+
+function updateMonthDisplay() {
+  document.getElementById('monthDisplay').textContent = getMonthDisplay(state.currentMonth);
+}
+
+// ── Formatting ──
+function fmt(n) { return `${currency} ${Math.abs(n).toFixed(2)}`; }
+
+// ── Summary ──
+function calcSummary() {
+  const monthData = getMonthData(state.currentMonth);
+  const totalIncome = monthData.transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const totalExpense = monthData.transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const currentBal = monthData.openingBalance + totalIncome - totalExpense;
+  return { totalIncome, totalExpense, currentBal };
+}
+
+function renderSummary() {
+  const monthData = getMonthData(state.currentMonth);
+  const s = calcSummary();
+  document.getElementById('openingBalDisplay').textContent = fmt(monthData.openingBalance);
+  document.getElementById('totalIncomeDisplay').textContent = fmt(s.totalIncome);
+  document.getElementById('totalExpenseDisplay').textContent = fmt(s.totalExpense);
+  const balEl = document.getElementById('currentBalDisplay');
+  balEl.textContent = (s.currentBal < 0 ? '-' : '') + fmt(s.currentBal);
+  balEl.className = `text-lg sm:text-xl font-bold ${s.currentBal < 0 ? 'text-rose-500' : 'text-slate-900'}`;
+}
+
+// ── Transactions ──
+function updateCategories() {
+  const type = document.getElementById('txType').value;
+  const sel = document.getElementById('txCategory');
+  const cats = type === 'income' ? INCOME_CATS : EXPENSE_CATS;
+  sel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+function handleTxSubmit(e) {
+  e.preventDefault();
+  const date = document.getElementById('txDate').value;
+  const type = document.getElementById('txType').value;
+  const category = document.getElementById('txCategory').value;
+  const desc = document.getElementById('txDesc').value.trim();
+  const amount = parseFloat(document.getElementById('txAmount').value);
+  if (!date || !desc || isNaN(amount) || amount <= 0) { showToast('Please fill all fields correctly', 'error'); return; }
+
+  const monthData = getMonthData(state.currentMonth);
+  if (state.editingId) {
+    const tx = monthData.transactions.find(t => t.id === state.editingId);
+    if (tx) { 
+      tx.date = date; 
+      tx.type = type; 
+      tx.category = category; 
+      tx.desc = desc; 
+      tx.amount = amount; 
+    }
+    state.editingId = null;
+    document.getElementById('txSubmitBtn').textContent = 'Add';
+    document.getElementById('txCancelBtn').classList.add('hidden');
+    document.getElementById('formTitle').textContent = 'Add Transaction';
+    showToast('Transaction updated');
+  } else {
+    monthData.transactions.push({ id: genId(), date, type, category, desc, amount });
+    showToast('Transaction added');
+  }
+  // CRITICAL: Save BEFORE rendering to prevent data loss
+  saveState();
+  renderAll();
+  e.target.reset();
+  document.getElementById('txDate').value = new Date().toISOString().slice(0, 10);
+  updateCategories();
+}
+
+function editTx(id) {
+  const monthData = getMonthData(state.currentMonth);
+  const tx = monthData.transactions.find(t => t.id === id);
+  if (!tx) return;
+  state.editingId = id;
+  document.getElementById('txDate').value = tx.date;
+  document.getElementById('txType').value = tx.type;
+  updateCategories();
+  document.getElementById('txCategory').value = tx.category;
+  document.getElementById('txDesc').value = tx.desc;
+  document.getElementById('txAmount').value = tx.amount;
+  document.getElementById('txSubmitBtn').textContent = 'Update';
+  document.getElementById('txCancelBtn').classList.remove('hidden');
+  document.getElementById('formTitle').textContent = 'Edit Transaction';
+  switchTab('transactions');
+  document.getElementById('txForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function cancelEdit() {
+  state.editingId = null;
+  document.getElementById('txForm').reset();
+  document.getElementById('txDate').value = new Date().toISOString().slice(0, 10);
+  updateCategories();
+  document.getElementById('txSubmitBtn').textContent = 'Add';
+  document.getElementById('txCancelBtn').classList.add('hidden');
+  document.getElementById('formTitle').textContent = 'Add Transaction';
+}
+
+let deleteConfirmId = null;
+function deleteTx(id) {
+  deleteConfirmId = id;
+  renderTransactions();
+}
+function confirmDelete(id) {
+  const monthData = getMonthData(state.currentMonth);
+  monthData.transactions = monthData.transactions.filter(t => t.id !== id);
+  deleteConfirmId = null;
+  // CRITICAL: Save BEFORE rendering to prevent data loss
+  saveState();
+  renderAll();
+  showToast('Transaction deleted');
+}
+function cancelDelete() {
+  deleteConfirmId = null;
+  renderTransactions();
+}
+
+function renderTransactions() {
+  const monthData = getMonthData(state.currentMonth);
+  let txs = [...monthData.transactions].sort((a, b) => b.date.localeCompare(a.date));
+  if (state.filter !== 'all') txs = txs.filter(t => t.type === state.filter);
+
+  const list = document.getElementById('txList');
+  const empty = document.getElementById('txEmpty');
+
+  if (txs.length === 0) {
+    list.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  // Build existing map
+  const existing = new Map([...list.children].map(el => [el.dataset.txId, el]));
+  const fragment = document.createDocumentFragment();
+
+  txs.forEach(tx => {
+    let el = existing.get(tx.id);
+    if (el) {
+      updateTxElement(el, tx);
+      existing.delete(tx.id);
+    } else {
+      el = createTxElement(tx);
+    }
+    fragment.appendChild(el);
+  });
+  existing.forEach(el => el.remove());
+  list.innerHTML = '';
+  list.appendChild(fragment);
+
+  // Update filter buttons
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    if (btn.dataset.filter === state.filter) {
+      btn.className = 'filter-btn text-xs px-3 py-1 rounded-full border border-slate-800 bg-slate-800 text-white transition';
+    } else {
+      btn.className = 'filter-btn text-xs px-3 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-slate-400 transition';
+    }
+  });
+}
+
+function createTxElement(tx) {
+  const el = document.createElement('div');
+  el.dataset.txId = tx.id;
+  updateTxElement(el, tx);
+  return el;
+}
+
+function updateTxElement(el, tx) {
+  const isConfirming = deleteConfirmId === tx.id;
+  const isIncome = tx.type === 'income';
+  el.className = 'bg-white rounded-lg p-3 sm:p-4 card-shadow flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 w-full';
+  el.style.width = '100%';
+  el.innerHTML = `
+    <div class="flex-1 min-w-0 w-full sm:w-auto">
+      <div class="flex items-center gap-2 mb-0.5 flex-wrap">
+        <span class="text-sm font-semibold text-slate-800 truncate">${escHtml(tx.desc)}</span>
+        <span class="text-[10px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap shrink-0 ${isIncome ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}">${tx.category}</span>
+      </div>
+      <p class="text-xs text-slate-400">${formatDate(tx.date)}</p>
+    </div>
+    <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+      <span class="text-sm font-bold ${isIncome ? 'text-emerald-600' : 'text-rose-500'} flex-1 sm:flex-none">${isIncome ? '+' : '-'}${fmt(tx.amount)}</span>
+      ${isConfirming ? `
+        <div class="inline-confirm">
+          <span class="text-xs text-slate-500">Delete?</span>
+          <button onclick="confirmDelete('${tx.id}')" class="text-xs px-2 py-1 bg-rose-500 text-white rounded font-medium hover:bg-rose-600 transition" style="font-size: 16px; min-height: 36px;">Yes</button>
+          <button onclick="cancelDelete()" class="text-xs px-2 py-1 border border-slate-200 text-slate-500 rounded font-medium hover:bg-slate-50 transition" style="font-size: 16px; min-height: 36px;">No</button>
+        </div>
+      ` : `
+        <button onclick="editTx('${tx.id}')" class="text-slate-300 hover:text-slate-500 transition shrink-0 p-2 -m-2" aria-label="Edit"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>
+        <button onclick="deleteTx('${tx.id}')" class="text-slate-300 hover:text-rose-400 transition shrink-0 p-2 -m-2" aria-label="Delete"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+      `}
+    </div>`;
+  lucide.createIcons();
+}
+
+function formatDate(d) {
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function setFilter(f) { state.filter = f; renderTransactions(); }
+
+// ── Budget ──
+function renderBudget() {
+  const monthData = getMonthData(state.currentMonth);
+  const container = document.getElementById('budgetList');
+  const expByCat = {};
+  monthData.transactions.filter(t => t.type === 'expense').forEach(t => {
+    expByCat[t.category] = (expByCat[t.category] || 0) + t.amount;
+  });
+
+  container.innerHTML = EXPENSE_CATS.map(cat => {
+    const budget = monthData.budgets[cat] || 0;
+    const spent = expByCat[cat] || 0;
+    const remaining = budget - spent;
+    const pct = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
+    const over = spent > budget && budget > 0;
+    const almostReached = !over && budget > 0 && pct >= 80;
+    
+    let barColor = '#334155';
+    let statusBadge = '';
+    let statusText = '';
+    
+    if (over) {
+      barColor = '#dc2626';
+      statusBadge = '<span class="inline-block ml-2 px-2.5 py-0.5 bg-red-50 text-red-600 text-[10px] font-semibold rounded-full">OVER BUDGET</span>';
+      statusText = `Over by ${fmt(Math.abs(remaining))}`;
+    } else if (almostReached) {
+      barColor = '#f59e0b';
+      statusBadge = '<span class="inline-block ml-2 px-2.5 py-0.5 bg-amber-50 text-amber-600 text-[10px] font-semibold rounded-full">ALMOST REACHED</span>';
+      statusText = `${fmt(remaining)} left`;
+    } else {
+      statusText = `${fmt(remaining)} left`;
+    }
+
+    return `
+    <div class="pb-4 border-b border-slate-100 last:border-0">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-2">
+        <span class="text-sm font-medium text-slate-700 break-words flex-1">${cat}</span>
+        <div class="flex items-center gap-2 flex-wrap">
+          ${statusBadge}
+          <div class="flex items-center gap-2 text-xs text-slate-400 flex-wrap sm:flex-nowrap whitespace-nowrap">
+            <label for="budget_${cat.replace(/\s/g,'_')}" class="sr-only">Budget for ${cat}</label>
+            <div class="flex items-center gap-1">
+              <span>${currency}</span>
+              <input type="number" id="budget_${cat.replace(/\s/g,'_')}" value="${budget}" min="0" step="10"
+                onchange="updateBudget('${cat}', this.value)"
+                style="font-size: 16px; width: 70px; min-width: 70px;"
+                class="border border-slate-200 rounded px-2 py-1 text-xs text-right focus:ring-1 focus:ring-slate-300 bg-slate-50">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="progress-track mb-1.5" style="width: 100%;">
+        <div class="progress-fill" style="width:${Math.max(pct, 0)}%; background:${barColor};"></div>
+      </div>
+      <div class="flex justify-between text-[11px] flex-wrap gap-1">
+        <span class="text-slate-400">Spent: ${fmt(spent)}</span>
+        <span class="${over ? 'text-red-600 font-semibold' : almostReached ? 'text-amber-600 font-medium' : 'text-slate-400'}">${statusText}</span>
+        <span class="text-slate-300">${pct.toFixed(0)}%</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateBudget(cat, val) {
+  const monthData = getMonthData(state.currentMonth);
+  const newVal = parseFloat(val) || 0;
+  if (monthData.budgets[cat] !== newVal) {
+    monthData.budgets[cat] = newVal;
+    // CRITICAL: Save BEFORE rendering to prevent data loss
+    saveState();
+  }
+  renderBudget();
+}
+
+// ── Chart ──
+function renderChart() {
+  const ctx = document.getElementById('chartCanvas');
+  if (!ctx) return;
+
+  // Group all months by month
+  const monthData = {};
+  Object.keys(state.months).forEach(monthKey => {
+    monthData[monthKey] = { income: 0, expense: 0 };
+    state.months[monthKey].transactions.forEach(tx => {
+      if (tx.type === 'income') monthData[monthKey].income += tx.amount;
+      else monthData[monthKey].expense += tx.amount;
+    });
+  });
+
+  const labels = Object.keys(monthData).sort().slice(-6); // Last 6 months
+  const incomes = labels.map(l => monthData[l].income);
+  const expenses = labels.map(l => monthData[l].expense);
+  const displayLabels = labels.map(l => {
+    const d = new Date(l + '-01');
+    return d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+  });
+
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: displayLabels.length ? displayLabels : ['No data'],
+      datasets: [
+        { label: 'Income', data: incomes.length ? incomes : [0], backgroundColor: '#059669', borderRadius: 6, barPercentage: 0.6 },
+        { label: 'Expenses', data: expenses.length ? expenses : [0], backgroundColor: '#e11d48', borderRadius: 6, barPercentage: 0.6 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle', padding: 20, font: { family: 'DM Sans', size: 12 } } }
+      },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'DM Sans', size: 11 }, callback: v => currency + ' ' + v } },
+        x: { grid: { display: false }, ticks: { font: { family: 'DM Sans', size: 11 } } }
+      }
+    }
+  });
+}
+
+// ── Categories Management ──
+function renderCategories() {
+  // Expense categories
+  const expList = document.getElementById('expenseCatsList');
+  expList.innerHTML = EXPENSE_CATS.map(cat => `
+    <div class="category-tag bg-rose-50 text-rose-700 break-words max-w-full" style="width: 100%;">
+      <span class="break-words">${cat}</span>
+      <button type="button" onclick="removeExpenseCat('${cat}')" class="category-remove ml-auto text-rose-500 hover:text-rose-700 shrink-0" aria-label="Remove">×</button>
+    </div>
+  `).join('');
+
+  // Income categories
+  const incList = document.getElementById('incomeCatsList');
+  incList.innerHTML = INCOME_CATS.map(cat => `
+    <div class="category-tag bg-emerald-50 text-emerald-700 break-words max-w-full" style="width: 100%;">
+      <span class="break-words">${cat}</span>
+      <button type="button" onclick="removeIncomeCat('${cat}')" class="category-remove ml-auto text-emerald-500 hover:text-emerald-700 shrink-0" aria-label="Remove">×</button>
+    </div>
+  `).join('');
+}
+
+function addExpenseCat() {
+  const input = document.getElementById('newExpCat');
+  const cat = input.value.trim();
+  if (!cat) { showToast('Enter a category name', 'error'); return; }
+  if (EXPENSE_CATS.includes(cat)) { showToast('Category already exists', 'error'); return; }
+  EXPENSE_CATS.push(cat);
+  input.value = '';
+  // CRITICAL: Save BEFORE rendering to prevent data loss
+  saveState();
+  renderCategories();
+  updateCategories();
+  showToast('Expense category added');
+}
+
+function removeExpenseCat(cat) {
+  EXPENSE_CATS = EXPENSE_CATS.filter(c => c !== cat);
+  // CRITICAL: Save BEFORE rendering to prevent data loss
+  saveState();
+  renderCategories();
+  updateCategories();
+  showToast('Expense category removed');
+}
+
+function addIncomeCat() {
+  const input = document.getElementById('newIncCat');
+  const cat = input.value.trim();
+  if (!cat) { showToast('Enter a category name', 'error'); return; }
+  if (INCOME_CATS.includes(cat)) { showToast('Category already exists', 'error'); return; }
+  INCOME_CATS.push(cat);
+  input.value = '';
+  // CRITICAL: Save BEFORE rendering to prevent data loss
+  saveState();
+  renderCategories();
+  updateCategories();
+  showToast('Income category added');
+}
+
+function removeIncomeCat(cat) {
+  INCOME_CATS = INCOME_CATS.filter(c => c !== cat);
+  // CRITICAL: Save BEFORE rendering to prevent data loss
+  saveState();
+  renderCategories();
+  updateCategories();
+  showToast('Income category removed');
+}
+
+// ── Tabs ──
+function switchTab(tab) {
+  ['transactions', 'budget', 'analytics', 'forecast', 'settings'].forEach(t => {
+    const el = document.getElementById('tab-' + t);
+    const btn = document.querySelector(`[data-tab="${t}"]`);
+    if (t === tab) { el.classList.remove('hidden'); btn.className = 'tab-active pb-2 text-sm transition whitespace-nowrap'; }
+    else { el.classList.add('hidden'); btn.className = 'tab-inactive pb-2 text-sm transition whitespace-nowrap'; }
+  });
+  if (tab === 'analytics') setTimeout(renderChart, 50);
+  if (tab === 'budget') renderBudget();
+  if (tab === 'forecast') renderForecast();
+  if (tab === 'settings') renderCategories();
+}
+
+// ── Opening Balance Modal ──
+function showOpeningBalEdit() {
+  const monthData = getMonthData(state.currentMonth);
+  document.getElementById('obInput').value = monthData.openingBalance;
+  document.getElementById('obModal').classList.remove('hidden');
+}
+function closeOBModal(e) { if (e.target === e.currentTarget) document.getElementById('obModal').classList.add('hidden'); }
+function saveOpeningBal() {
+  const v = parseFloat(document.getElementById('obInput').value);
+  if (isNaN(v)) { showToast('Enter a valid number', 'error'); return; }
+  const monthData = getMonthData(state.currentMonth);
+  if (monthData.openingBalance !== v) {
+    monthData.openingBalance = v;
+    // CRITICAL: Save BEFORE rendering to prevent data loss
+    saveState();
+  }
+  renderSummary();
+  document.getElementById('obModal').classList.add('hidden');
+  showToast('Opening balance updated');
+}
+
+// ── Toast ──
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type === 'error' ? 'bg-rose-500 text-white' : 'bg-slate-800 text-white'}`;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
+
+// ── Utils ──
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// ── Forecast Logic ──
+function generateForecast(monthsToForecast = 3) {
+  const forecast = [];
+  let currentMonth = state.currentMonth;
+  let currentBalance = getMonthData(currentMonth).openingBalance;
+  
+  // Calculate current month's income and expenses
+  const currentMonthData = getMonthData(currentMonth);
+  let currentIncome = 0;
+  let currentExpense = 0;
+  currentMonthData.transactions.forEach(tx => {
+    if (tx.type === 'income') currentIncome += tx.amount;
+    else currentExpense += tx.amount;
+  });
+
+  // For current month, calculate ending balance
+  currentBalance = currentMonthData.openingBalance + currentIncome - currentExpense;
+
+  // Generate forecast for future months
+  for (let i = 1; i <= monthsToForecast; i++) {
+    const [year, month] = currentMonth.split('-');
+    let nextYear = parseInt(year);
+    let nextMonth = parseInt(month) + i;
+    
+    if (nextMonth > 12) {
+      nextYear += Math.floor((nextMonth - 1) / 12);
+      nextMonth = ((nextMonth - 1) % 12) + 1;
+    }
+
+    const nextMonthStr = nextYear + '-' + String(nextMonth).padStart(2, '0');
+    const nextMonthData = getMonthData(nextMonthStr);
+
+    // Get recurring transactions (from current or previous months that exist)
+    let forecastIncome = 0;
+    let forecastExpense = 0;
+
+    // Use similar pattern as current month
+    currentMonthData.transactions.forEach(tx => {
+      if (tx.type === 'income') forecastIncome += tx.amount;
+      else forecastExpense += tx.amount;
+    });
+
+    // Adjust if actual transactions exist for this month
+    if (nextMonthData.transactions && nextMonthData.transactions.length > 0) {
+      forecastIncome = 0;
+      forecastExpense = 0;
+      nextMonthData.transactions.forEach(tx => {
+        if (tx.type === 'income') forecastIncome += tx.amount;
+        else forecastExpense += tx.amount;
+      });
+    }
+
+    const endingBalance = currentBalance + forecastIncome - forecastExpense;
+    
+    forecast.push({
+      month: nextMonthStr,
+      income: forecastIncome,
+      expense: forecastExpense,
+      openingBalance: currentBalance,
+      endingBalance: endingBalance
+    });
+
+    currentBalance = endingBalance;
+  }
+
+  return forecast;
+}
+
+function checkFinancialRisks(forecast) {
+  const risks = [];
+  
+  // Check for negative balance
+  const negativeMonth = forecast.find(f => f.endingBalance < 0);
+  if (negativeMonth) {
+    risks.push({
+      type: 'negative',
+      text: `Negative balance expected in ${getMonthDisplay(negativeMonth.month)}`,
+      month: negativeMonth.month,
+      value: negativeMonth.endingBalance
+    });
+  }
+
+  // Check for consistent overspending
+  const overspendingMonths = forecast.filter(f => f.expense > f.income).length;
+  if (overspendingMonths >= Math.ceil(forecast.length / 2)) {
+    risks.push({
+      type: 'overspend',
+      text: 'Spending exceeds income in most months ahead',
+      months: overspendingMonths
+    });
+  }
+
+  return risks;
+}
+
+function renderForecast() {
+  const forecast = generateForecast(state.forecastMonths);
+  const risks = checkFinancialRisks(forecast);
+
+  // Update period buttons
+  document.getElementById('forecast-3m').className = state.forecastMonths === 3 
+    ? 'forecast-period-btn px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-slate-800 bg-slate-800 text-white transition'
+    : 'forecast-period-btn px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-slate-200 text-slate-600 hover:border-slate-400 transition';
+  
+  document.getElementById('forecast-6m').className = state.forecastMonths === 6 
+    ? 'forecast-period-btn px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-slate-800 bg-slate-800 text-white transition'
+    : 'forecast-period-btn px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-slate-200 text-slate-600 hover:border-slate-400 transition';
+
+  // Render alerts
+  const alertsContainer = document.getElementById('forecastAlerts');
+  alertsContainer.innerHTML = risks.map(risk => {
+    if (risk.type === 'negative') {
+      return `<div class="bg-rose-50 border border-rose-200 rounded-lg p-3 flex items-start gap-3">
+        <i data-lucide="alert-circle" style="width:18px;height:18px;color:#e11d48;flex-shrink:0;margin-top:2px;"></i>
+        <div>
+          <p class="text-sm font-semibold text-rose-900">Negative Balance Expected</p>
+          <p class="text-xs text-rose-700">${risk.text} (${fmt(risk.value)})</p>
+        </div>
+      </div>`;
+    } else if (risk.type === 'overspend') {
+      return `<div class="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-3">
+        <i data-lucide="alert-triangle" style="width:18px;height:18px;color:#d97706;flex-shrink:0;margin-top:2px;"></i>
+        <div>
+          <p class="text-sm font-semibold text-amber-900">Spending Alert</p>
+          <p class="text-xs text-amber-700">${risk.text} (${risk.months}/${forecast.length} months)</p>
+        </div>
+      </div>`;
+    }
+  }).join('');
+  lucide.createIcons();
+
+  // Render forecast cards
+  const cardsContainer = document.getElementById('forecastCards');
+  cardsContainer.innerHTML = forecast.map(f => {
+    const balanceNegative = f.endingBalance < 0;
+    const balanceWarning = f.endingBalance < 500;
+    
+    return `<div class="bg-slate-50 rounded-lg p-4 border border-slate-200" style="width: 100%;">
+      <h4 class="text-sm font-semibold text-slate-700 mb-3">${getMonthDisplay(f.month)}</h4>
+      <div class="space-y-2.5">
+        <div class="flex justify-between items-end">
+          <span class="text-xs text-slate-500">Income</span>
+          <span class="text-sm font-semibold text-emerald-600">${fmt(f.income)}</span>
+        </div>
+        <div class="flex justify-between items-end border-t border-slate-200 pt-2">
+          <span class="text-xs text-slate-500">Expenses</span>
+          <span class="text-sm font-semibold text-rose-500">${fmt(f.expense)}</span>
+        </div>
+        <div class="flex justify-between items-end border-t border-slate-200 pt-2">
+          <span class="text-xs text-slate-500">Ending Balance</span>
+          <span class="text-sm font-bold ${balanceNegative ? 'text-rose-600' : balanceWarning ? 'text-amber-600' : 'text-slate-900'}">${balanceNegative ? '-' : ''}${fmt(f.endingBalance)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Render chart
+  setTimeout(renderForecastChart, 50);
+}
+
+function renderForecastChart() {
+  const forecast = generateForecast(state.forecastMonths);
+  const ctx = document.getElementById('forecastChartCanvas');
+  if (!ctx) return;
+
+  const labels = forecast.map(f => {
+    const d = new Date(f.month + '-01');
+    return d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+  });
+
+  const incomeData = forecast.map(f => f.income);
+  const expenseData = forecast.map(f => f.expense);
+  const balanceData = forecast.map(f => f.endingBalance);
+
+  if (forecastChart) forecastChart.destroy();
+
+  forecastChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Projected Balance',
+          data: balanceData,
+          borderColor: '#334155',
+          backgroundColor: 'rgba(51, 65, 85, 0.05)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 5,
+          pointBackgroundColor: '#334155',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          pointHoverRadius: 7
+        },
+        {
+          label: 'Income',
+          data: incomeData,
+          borderColor: '#059669',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.4,
+          pointRadius: 3,
+          pointBackgroundColor: '#059669',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 1,
+          borderDash: [5, 5]
+        },
+        {
+          label: 'Expenses',
+          data: expenseData,
+          borderColor: '#e11d48',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.4,
+          pointRadius: 3,
+          pointBackgroundColor: '#e11d48',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 1,
+          borderDash: [5, 5]
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            usePointStyle: true,
+            pointStyle: 'circle',
+            padding: 20,
+            font: { family: 'DM Sans', size: 12 }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: '#f1f5f9' },
+          ticks: {
+            font: { family: 'DM Sans', size: 11 },
+            callback: v => currency + ' ' + v
+          }
+        },
+        x: {
+          grid: { display: false },
+          ticks: {
+            font: { family: 'DM Sans', size: 11 }
+          }
+        }
+      }
+    }
+  });
+}
+
+function setForecastMonths(months) {
+  state.forecastMonths = months;
+  renderForecast();
+}
+
+// ── Render All ──
+function renderAll() {
+  renderSummary();
+  renderTransactions();
+  renderBudget();
+  if (!document.getElementById('tab-analytics').classList.contains('hidden')) renderChart();
+}
+
+// ── Init ──
+async function initApp() {
+  await initStorage();
+  await loadState();
+  state.currentMonth = getCurrentMonthStr();
+  autoDuplicateFromPrevMonth(state.currentMonth);
+  updateMonthDisplay();
+  applyConfig(defaultConfig);
+  document.getElementById('txDate').value = new Date().toISOString().slice(0, 10);
+  updateCategories();
+  renderAll();
+  lucide.createIcons();
+}
+
+initApp();
+</script>
+</body>
+</html>
